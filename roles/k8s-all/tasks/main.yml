@@ -7,6 +7,11 @@
   ansible.builtin.selinux:
     state: disabled
 
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
 - name: Install Packages kubernetes
   yum:
     name: "{{ item }}"
