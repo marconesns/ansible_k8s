@@ -1,0 +1,24 @@
+- hosts: kubernetes
+  gather_facts: true
+  remote_user: root
+  become: yes
+  become_user: root
+  roles:
+    - { role: crio }
+    - { role: k8s-all }
+
+- hosts: masters
+  gather_facts: true
+  remote_user: root
+  become: yes
+  become_user: root
+  roles:
+    - { role: k8s-master }
+
+- hosts: workers
+  gather_facts: true
+  remote_user: root
+  become: yes
+  become_user: root
+  roles:
+    - { role: k8s-worker }

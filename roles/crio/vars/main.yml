@@ -1,0 +1,6 @@
+---
+docker_packages:
+- cri-o
+- cri-tools
+
+VERSION: 1.22

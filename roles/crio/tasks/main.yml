@@ -1,0 +1,71 @@
+- name: Remove swap file
+  mount:
+    name: swap
+    fstype: swap
+    state: absent
+
+- name: Disable Swap
+  command: swapoff -a
+
+- name: Install and configure prerequisites
+  template:
+    src: crio.conf.j2
+    dest: /etc/modules-load.d/crio.conf
+
+- name: modprobe br_netfilter
+  command: modprobe br_netfilter
+
+- name: Required sysctl params
+  template:
+    src: 99-kubernetes-cri.conf.j2
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+
+- name: Apply sysctl params
+  shell: sysctl --system
+
+- name: Setup the repository
+  yum:
+    name: yum-utils
+    state: present
+
+# - name: Repository cri-o kubic
+#   shell: curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/CentOS_7/devel:kubic:libcontainers:stable.repo
+- name: Repository cri-o kubic
+  yum_repository:
+    name: devel:kubic:libcontainers:stable
+    description: devel:kubic:libcontainers:stable
+    baseurl: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_7/
+    gpgkey: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_7/repodata/repomd.xml.key
+    enabled: yes
+    repo_gpgcheck: no
+  # no_log: True
+
+# - name: Repository crio-o
+#   shell: curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:"{{ VERSION }}".repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:"{{ VERSION }}"/CentOS_7/devel:kubic:libcontainers:stable:cri-o:"{{ VERSION }}".repo
+- name: Repository crio-o
+  yum_repository:
+    name: devel:kubic:libcontainers:stable:cri-o:{{ VERSION }}
+    description: devel:kubic:libcontainers:stable:cri-o:"{{ VERSION }}"
+    baseurl: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ VERSION}}/CentOS_7/
+    gpgkey: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ VERSION }}/CentOS_7/repodata/repomd.xml.key
+    enabled: yes
+    repo_gpgcheck: no
+  no_log: True
+
+- name: Install packages Cri-o
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - cri-o
+    - cri-tools
+  
+- name: forçar os ajustes no systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start CRI-O
+  ansible.builtin.service:
+    name: crio
+    state: started
+    enabled: yes

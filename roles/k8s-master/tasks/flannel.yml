@@ -1,0 +1,13 @@
+- name: Put flannel template
+  template:
+    src: kube-flannel.yml.j2
+    dest: /tmp/flannel.yml
+    owner: root
+    group: root
+    mode: "0777"
+
+- name: Setup flannel
+  command: kubectl -n kube-system apply -f /tmp/flannel.yml
+  args: 
+    chdir: $HOME
+    creates: flannel-apply.log
